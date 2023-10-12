@@ -1,25 +1,31 @@
 import * as Phaser from "phaser";
 
 import "./style.css";
+import { Vector } from "matter";
 
 class Enemy extends Phaser.Physics.Arcade.Sprite {
+    isDestroyed: Boolean = false
+    private scenePlayer: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     constructor(
         scene: Phaser.Scene,
-        player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
-        onDestroy: () => void
+        player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
     ) {
+        const rMin = 120;
+        const rMax = 1000;
+        const phi = rMin + ((rMax - rMin)* Math.random());
+        const tetta = Math.random() * Math.PI * 2;
+        const xPos = (phi * Math.cos(tetta));
+        const yPos = (phi * Math.sin(tetta));
+        console.log(player.x + xPos, player.y + yPos);
+
         super(
             scene,
-            player.x +
-                (Math.random() - 0.5) *
-                    2 *
-                    Math.min((Math.random() * 500, 300)),
-            player.y +
-                (Math.random() - 0.5) *
-                    2 *
-                    Math.min((Math.random() * 500, 300)),
+            player.x + xPos,
+            player.y + yPos,
             "enemy"
         );
+
+        this.scenePlayer = player;
 
         console.log("enemy created");
 
@@ -28,12 +34,16 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
 
         scene.physics.add.collider(player, this, (player, self) => {
             self.destroy();
-            onDestroy();
+            this.isDestroyed = true;
         });
     }
 
     update() {
-        this.setVelocity(50, 50);
+        // I don't know how to write it in pretty way
+        let vectorToPlayer = new Phaser.Math.Vector2(this.scenePlayer.x - this.x, this.scenePlayer.y - this.y);
+        vectorToPlayer = vectorToPlayer.normalize();
+        vectorToPlayer = vectorToPlayer.scale(50);
+        this.setVelocity(vectorToPlayer.x, vectorToPlayer.y);
     }
 }
 
@@ -65,7 +75,15 @@ export default class Demo extends Phaser.Scene {
     }
 
     update(time: number, delta: number): void {
-        this.enemies.forEach((enemy) => enemy.update());
+        this.enemies.forEach((enemy) => {
+            if(!enemy.isDestroyed) {
+                enemy.update()
+            }
+            if(enemy.isDestroyed) {
+                const indexToDelete = this.enemies.indexOf(enemy);
+                this.enemies.slice(indexToDelete, 1);
+            }
+        });
 
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-200);
