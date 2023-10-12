@@ -1,0 +1,18 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.{ts,js,css,html}]
+indent_size = 4
+indent_style = space
+
+[*.{json,yml,yaml}]
+indent_size = 2
+indent_style = space
+
+[{package.json,tsconfig.json}]
+indent_size = 4
+indent_style = space
